@@ -1,26 +1,32 @@
-package com.pcess.ui;
+package com.pcessflight.splashpermissions;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
+import android.widget.TextView;
 
 /**
- * This abstract {@link Activity}, which extends the {@link ImageActivity}
- * class, functions as a base class for a splash screen. This class will
- * function differently on pre- and post-Android 6.0 devices, although in both
- * cases, the {@link #getNextActivityClass()} method must be overridden, since
- * {@link #getNextActivityClass()} returns the {@link Activity} to start once
- * the splash screen times out.
+ * This {@link Activity} functions as a base class for a splash screen.
+ * This class will function differently on pre- and post-Android 6.0 devices,
+ * although in both cases, the {@link #getNextActivityClass()} method must be
+ * overridden, since {@link #getNextActivityClass()} returns the
+ * {@link Activity} to start once the splash screen times out.
  *
  *
  * <p/>
@@ -49,17 +55,11 @@ import android.util.Log;
  *
  * <p/>
  *
- * By default, this splash screen will show the Pcess logo for 1 second, and it
- * will not request any permissions. However, you can change the image that is
- * shown on the splash screen, the timeout duration (in milliseconds), and the
- * permissions required by your app by extending this class and overriding the
- * {@link #getBase64Image()}, {@link #getTimeoutMillis()}, and
- * {@link #getRequiredPermissions()} methods. Furthermore, if you would like to
- * display a different image while acquiring permissions, you can override
- * {@link #getBase64ImageDuringPermissionAcquisition()}
+ * You can change the timeout duration (in milliseconds) and the permissions
+ * required by your app by extending this class and overriding
+ * {@link #getTimeoutMillis()} and {@link #getRequiredPermissions()} methods.
  */
-@SuppressWarnings("rawtypes")
-abstract public class SplashScreenActivity extends ImageActivity {
+public class SplashPermissionsActivity extends Activity {
 
     /**
      * ---------------------------------------------
@@ -71,13 +71,23 @@ abstract public class SplashScreenActivity extends ImageActivity {
     /**
      * The time that the splash screen will be on the screen in milliseconds.
      */
-    private int              timeoutMillis       = 1000;
+    private int                 timeoutMillis       = 5000;
 
     /** The time when this {@link Activity} was created. */
-    private long             startTimeMillis     = 0;
+    private long                startTimeMillis     = 0;
 
     /** The code used when requesting permissions */
-    private static final int PERMISSIONS_REQUEST = 4646;
+    private static final int    PERMISSIONS_REQUEST = 1234;
+
+    /** A random number generator for the background colors. */
+    private static final Random random              = new Random();
+
+    /**
+     * The TextView which is used to inform the user whether the permissions are
+     * granted.
+     */
+    private TextView            textView            = null;
+    private static final int    textViewID          = View.generateViewId();
 
     /**
      * ---------------------------------------------
@@ -96,7 +106,10 @@ abstract public class SplashScreenActivity extends ImageActivity {
     }
 
     /** Get the {@link Activity} to start when the splash screen times out. */
-    abstract public Class getNextActivityClass();
+    @SuppressWarnings("rawtypes")
+    public Class getNextActivityClass() {
+        return SplashPermissionsActivity.class;
+    };
 
     /**
      * Get the list of required permissions by searching the manifest. If you
@@ -117,13 +130,12 @@ abstract public class SplashScreenActivity extends ImageActivity {
         } catch (NameNotFoundException e) {
             e.printStackTrace();
         }
-        return permissions.clone();
+        if (permissions == null) {
+            return new String[0];
+        } else {
+            return permissions.clone();
+        }
     }
-
-    /** Get the {@link Base64} image to display while acquiring permissions. */
-    public String getBase64ImageDuringPermissionAcquisition() {
-        return Base64Images.waitingForPermissions768();
-    };
 
     /**
      * ---------------------------------------------
@@ -139,6 +151,25 @@ abstract public class SplashScreenActivity extends ImageActivity {
         /** Default creation code. */
         super.onCreate(savedInstanceState);
 
+        /** Create the layout that will hold the TextView. */
+        LinearLayout mainLayout = new LinearLayout(this);
+        mainLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        /** Add a TextView and set the initial text. */
+        textView = new TextView(this);
+        textView.setId(textViewID);
+        textView.setText("Waiting for permissions...");
+        mainLayout.addView(textView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+        /** Set the background color. */
+        int off = 128;
+        int rest = 256 - off;
+        int color = Color.argb(255, off + random.nextInt(rest), off + random.nextInt(rest), off + random.nextInt(rest));
+        mainLayout.setBackgroundColor(color);
+
+        /** Set the mainLayout as the content view */
+        setContentView(mainLayout);
+
         /**
          * Save the start time of this Activity, which will be used to determine
          * when the splash screen should timeout.
@@ -150,7 +181,6 @@ abstract public class SplashScreenActivity extends ImageActivity {
          * been granted.
          */
         if (Build.VERSION.SDK_INT >= 23) {
-            getImageView().setImageBitmap(Base64Images.toBitmap(getBase64ImageDuringPermissionAcquisition()));
             checkPermissions();
         } else {
             startNextActivity();
@@ -180,19 +210,25 @@ abstract public class SplashScreenActivity extends ImageActivity {
     /**
      * After the timeout, start the {@link Activity} as specified by
      * {@link #getNextActivityClass()}, and remove the splash screen from the
-     * backstack.
+     * backstack. Also, we can change the message shown to the user to tell them
+     * we now have the requisite permissions.
      */
     private void startNextActivity() {
+        runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                textView.setText("Permissions granted...");
+            }
+        });
         long delayMillis = getTimeoutMillis() - (System.currentTimeMillis() - startTimeMillis);
         if (delayMillis < 0) {
             delayMillis = 0;
-        } else {
-            getImageView().setImageBitmap(Base64Images.toBitmap(getBase64Image()));
         }
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                startActivity(new Intent(SplashScreenActivity.this, getNextActivityClass()));
+                startActivity(new Intent(SplashPermissionsActivity.this, getNextActivityClass()));
                 finish();
             }
         }, delayMillis);
@@ -227,10 +263,10 @@ abstract public class SplashScreenActivity extends ImageActivity {
         for (Iterator<String> i = permissions.iterator(); i.hasNext();) {
             String permission = i.next();
             if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
-                Log.d(SplashScreenActivity.class.getSimpleName(), "Permission: " + permission + " already granted.");
+                Log.d(SplashPermissionsActivity.class.getSimpleName(), "Permission: " + permission + " already granted.");
                 i.remove();
             } else {
-                Log.d(SplashScreenActivity.class.getSimpleName(), "Permission: " + permission + " not yet granted.");
+                Log.d(SplashPermissionsActivity.class.getSimpleName(), "Permission: " + permission + " not yet granted.");
             }
         }
         return permissions.toArray(new String[permissions.size()]);
