@@ -157,6 +157,7 @@ public class SplashPermissionsActivity extends Activity {
 
         /** Add a TextView and set the initial text. */
         textView = new TextView(this);
+        textView.setTextSize(50);
         textView.setId(textViewID);
         textView.setText("Waiting for permissions...");
         mainLayout.addView(textView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
