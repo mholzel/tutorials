@@ -22,8 +22,8 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
 /**
- * This {@link Activity} functions as a base class for a splash screen.
- * This class will function differently on pre- and post-Android 6.0 devices,
+ * This {@link Activity} functions as a base class for a splash screen. This
+ * class will function differently on pre- and post-Android 6.0 devices,
  * although in both cases, the {@link #getNextActivityClass()} method must be
  * overridden, since {@link #getNextActivityClass()} returns the
  * {@link Activity} to start once the splash screen times out.
@@ -61,7 +61,7 @@ import android.widget.TextView;
  */
 public class SplashPermissionsActivity extends Activity {
 
-    /**
+    /*
      * ---------------------------------------------
      *
      * Private Fields
@@ -89,7 +89,7 @@ public class SplashPermissionsActivity extends Activity {
     private TextView            textView            = null;
     private static final int    textViewID          = View.generateViewId();
 
-    /**
+    /*
      * ---------------------------------------------
      *
      * Getters
@@ -108,7 +108,7 @@ public class SplashPermissionsActivity extends Activity {
     /** Get the {@link Activity} to start when the splash screen times out. */
     @SuppressWarnings("rawtypes")
     public Class getNextActivityClass() {
-        return SplashPermissionsActivity.class;
+        return MainActivity.class;
     };
 
     /**
@@ -137,10 +137,10 @@ public class SplashPermissionsActivity extends Activity {
         }
     }
 
-    /**
+    /*
      * ---------------------------------------------
      *
-     * {@link Activity} Methods
+     * Activity Methods
      *
      * ---------------------------------------------
      */
@@ -201,7 +201,7 @@ public class SplashPermissionsActivity extends Activity {
         }
     }
 
-    /**
+    /*
      * ---------------------------------------------
      *
      * Other Methods
@@ -264,10 +264,12 @@ public class SplashPermissionsActivity extends Activity {
         for (Iterator<String> i = permissions.iterator(); i.hasNext();) {
             String permission = i.next();
             if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
-                Log.d(SplashPermissionsActivity.class.getSimpleName(), "Permission: " + permission + " already granted.");
+                Log.d(SplashPermissionsActivity.class.getSimpleName(),
+                        "Permission: " + permission + " already granted.");
                 i.remove();
             } else {
-                Log.d(SplashPermissionsActivity.class.getSimpleName(), "Permission: " + permission + " not yet granted.");
+                Log.d(SplashPermissionsActivity.class.getSimpleName(),
+                        "Permission: " + permission + " not yet granted.");
             }
         }
         return permissions.toArray(new String[permissions.size()]);
