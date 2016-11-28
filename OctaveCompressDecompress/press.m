@@ -103,7 +103,7 @@ else
     c               = 0;
     compresser( varargin{:} );
     
-    % If the key isn't empty, save the sizes
+    % If the key is not empty, save the sizes
     if ~isempty(key)
         sizes.(key) = sz;
     end
