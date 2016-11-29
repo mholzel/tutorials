@@ -14,7 +14,6 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -32,7 +31,7 @@ import android.widget.TextView;
  * <p/>
  *
  * On pre-Android 6.0 devices, this {@link Activity} will display a
- * {@link Base64} image for {@link #getTimeoutMillis()} milliseconds, before
+ * random color for {@link #getTimeoutMillis()} milliseconds, before
  * starting the {@link Activity} specified by {@link #getNextActivityClass()}.
  *
  * <p/>
